@@ -1,0 +1,95 @@
+<html lang="en" ng-app="elucidata">
+  <head>
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">    
+  </head>
+  <style type="text/css">
+    .button {
+      cursor: pointer;
+      outline: none;
+    }
+    .outline-button-round {
+          position: relative;
+          z-index: 3;
+          background: transparent;
+          color: #1172c4;
+          /*font-size: 14px;*/
+          border-color: #1172c4;
+          border-style: solid;
+          border-width: 2px;
+          border-radius: 22px;
+          padding: 10px 40px;
+          text-transform: uppercase;
+          transition: all 0.2s linear;
+          a {
+              text-decoration: none;
+          }
+      }
+      .outline-button{
+          position: relative;
+          z-index: 3;
+          background: transparent;
+          color: #1172c4;
+          /*font-size: 14px;*/
+          border-color: #1172c4;
+          border-style: solid;
+          border-width: 2px;        
+          /*padding: 10px 40px;*/
+          text-transform: uppercase;
+          transition: all 0.2s linear;
+          a {
+              text-decoration: none;
+          }
+      }
+      .outline-button,.outline-button-round:hover {
+          color: white;
+          background: #1172c4;
+          border-color: white;
+          transition: all 0.2s linear;
+      }    
+      .black-white {
+          font-weight: 700;
+          color: #000;
+          border-color: #000;
+          background: transparent;
+      }
+      .black-white:hover {
+          color: white;
+          background: #000;
+          border-color: #000;
+      }
+
+      .active-black {
+        color: white;
+        background: #000;
+        border-color: #000;
+      }
+      .padding-0{
+        padding: 0%;
+      }
+      .padding-1{
+        padding: 1%;
+      }
+      .padding-2{
+        padding: 2%;
+      }
+  </style>
+  <body ng-controller="elucidataController">
+    <div class="container">
+      <div class="header text-center">
+        <h3 class="text-muted">UPLOAD YOUR DATA</h3>
+      </div>
+      <hr/>      
+      <div class="row text-center">
+        <form action="upload" method="post" enctype="multipart/form-data">
+          <div class="row padding-2">  
+            <input type="file" name="file">
+          </div>
+          <div class="row padding-2">
+            <input class="button outline-button black-white padding-1" type="submit" value="Upload">
+          </div>
+        </form>
+      </div>      
+    </div>
+  </body>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>  
+</html>
