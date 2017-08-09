@@ -46,7 +46,6 @@ ptyprocess==0.5.2
 pyasn1==0.1.9
 pycurl==7.43.0
 Pygments==2.2.0
-pygobject==3.20.0
 PyMySQL==0.7.2
 pyOpenSSL==0.15.1
 pyparsing==2.2.0
