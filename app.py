@@ -1,8 +1,3 @@
-# We'll render HTML templates and access data sent by POST
-# using the request object from flask. Redirect and url_for
-# will be used to redirect the user once the upload is done
-# and send_from_directory will help us to send/show on the
-# browser the file that the user just uploaded
 import os
 from flask import Flask, render_template, request, redirect, url_for, send_from_directory,jsonify
 from werkzeug import secure_filename
@@ -27,9 +22,42 @@ def allowed_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1] in app.config['ALLOWED_EXTENSIONS']
 
-# This route will show a form to perform an AJAX request
-# jQuery is loaded to execute the request and update the
-# value of the operation
+def get_similar_metabolites(dataset):
+    #create dataframe in such a way that new dataframe is
+    #left with sample columns and Accepted_Compound_ID columns
+    #which is basically column on metabolites   
+    testDataset=dataset.drop(Plasmalogen.columns[[0,1]], axis=1)
+    # #turn the tables i.e
+    # #Now each entry in col[Accepted_Compound_ID] is now a separate column
+    # #i.e each metabolite is a separate column now having values as information
+    # #of 1050 samples
+    transDataset = testDataset.transpose()
+    #data cleaning : getting rid of index set as column after transpose
+    #setting the first row as column headers
+    transDataset.columns = transDataset.iloc[0]
+    transDataset = transDataset.ix[1:]
+    #this can be easily optimized with look_ahead or a backtrack dictionary
+    similar_metabolites=[]
+    for column in transDataset.columns:    
+        for head in transDataset.columns:        
+            if column!=head:
+                z_stat, p_val = stats.ranksums(transDataset[column],transDataset[head])
+                #if score is greater than 0.05 
+                # => metabolites are statistically simillar 
+                if p_val>0.05:
+                    arr={
+                        "metabolite1":column,
+                        "metabolite2":head,
+                        "score":p_val
+                    }
+                    if len(similar_metabolites):
+                        for item in similar_metabolites:                        
+                            if (item['metabolite1']!=column and item['metabolite2']!=head)and(item['metabolite2']!=column and item['metabolite1']!=head):                                      
+                                similar_metabolites.append(arr)
+                    else:
+                        similar_metabolites.append(arr)
+    return similar_metabolites
+
 @app.route('/')
 def index():
     return render_template('index.html')
@@ -37,8 +65,8 @@ def index():
 
 # Route that will process the file upload
 @app.route('/upload', methods=['POST'])
-def upload():
-    global uploadedFile
+def upload():  
+    global uploadedFile  
     # Get the name of the uploaded file
     file = request.files['file']
     # Check if the file is one of the allowed types/extensions
@@ -49,16 +77,14 @@ def upload():
         # Move the file form the temporal folder to
         # the upload folder we setup
         file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-        # Redirect the user to the uploaded_file route, which
-        # will basicaly show on the browser the uploaded file
+        # Redirect the user to the uploaded_file route, which        
         return redirect(url_for('uploaded_file'))
 
-# This route is expecting a parameter containing the name
-# of a file. Then it will locate that file on the upload
-# directory and show it on the browser, so if the user uploads
-# an image, that image is going to be show after the upload
 @app.route('/output')
 def uploaded_file():
+    global uploadedFile
+    if(not uploadedFile):
+       return redirect(url_for('index')) 
     return render_template('result.html')
 
 @app.route('/processfile')
@@ -67,7 +93,9 @@ def process_file():
     global df 
     global PC
     global LPC
-    global Plasmalogen   
+    global Plasmalogen 
+    if(not uploadedFile):
+       return redirect(url_for('index')) 
     df = pd.read_excel('./uploads/'+uploadedFile, sep='none')
     #replace spaces with _ in column heads
     df.columns = [x.strip().replace(' ', '_') for x in df.columns]
@@ -141,91 +169,17 @@ def process_file():
     return response
 
 @app.route('/getSimilarMetabolites')
-def similar_group():    
+def similar_group(): 
+    global uploadedFile   
     global df
     global PC
     global LPC
-    global Plasmalogen   
-    #create dataframe in such a way that new dataframe is
-    #left with sample columns and Accepted_Compound_ID columns
-    #which is basically column on metabolites      
-    testPC=PC.drop(PC.columns[[0,1]], axis=1)
-    #turn the tables i.e
-    #Now each entry in col[Accepted_Compound_ID] is now a separate column
-    #i.e each metabolite is a separate column now having values as information
-    #of 1050 samples
-    transPC = testPC.transpose()
-    #data cleaning : getting rid of index set as column after transpose
-    #setting the first row as column headers
-    transPC.columns = transPC.iloc[0]
-    transPC = transPC.ix[1:]
-    #this can be easily optimized with look_ahead or a backtrack dictionary
-    similar_PC=[]
-    #iterate thriugh columns of PC,LPC,Plasmalogen
-    #to find the MWW score with each metabolite
-    for column in transPC.columns:    
-        for head in transPC.columns:        
-            if column!=head:
-                z_stat, p_val = stats.ranksums(transPC[column],transPC[head])
-                #if score is greater than 0.05 
-                # => metabolites are statistically simillar 
-                if p_val>0.05: 
-                    arr={
-                        "metabolite1":column,
-                        "metabolite2":head,
-                        "score":p_val
-                    } 
-                    if len(similar_PC):
-                        for item in similar_PC:                        
-                            if (item['metabolite1']!=column and item['metabolite2']!=head)and(item['metabolite2']!=column and item['metabolite1']!=head):                                      
-                                similar_PC.append(arr)
-                    else:
-                        similar_PC.append(arr)
-
-    testLPC=LPC.drop(LPC.columns[[0,1]], axis=1)
-    transLPC = testLPC.transpose()
-    transLPC.columns = transLPC.iloc[0]
-    transLPC = transLPC.ix[1:]
-    #this can be easily optimized with look_ahead or a backtrack dictionary
-    similar_LPC=[]
-    for column in transLPC.columns:    
-        for head in transLPC.columns:        
-            if column!=head:
-                z_stat, p_val = stats.ranksums(transLPC[column],transLPC[head])
-                if p_val>0.05:
-                    arr={
-                        "metabolite1":column,
-                        "metabolite2":head,
-                        "score":p_val
-                    }
-                    if len(similar_LPC):
-                        for item in similar_LPC:                        
-                            if (item['metabolite1']!=column and item['metabolite2']!=head)and(item['metabolite2']!=column and item['metabolite1']!=head):                                      
-                                similar_LPC.append(arr)
-                    else:
-                        similar_LPC.append(arr)
-    testPlasmalogen=Plasmalogen.drop(Plasmalogen.columns[[0,1]], axis=1)
-    transPlasmalogen = testPlasmalogen.transpose()
-    transPlasmalogen.columns = transPlasmalogen.iloc[0]
-    transPlasmalogen = transPlasmalogen.ix[1:]
-    #this can be easily optimized with look_ahead or a backtrack dictionary
-    similar_Plasmalogen=[]
-    for column in transPlasmalogen.columns:    
-        for head in transPlasmalogen.columns:        
-            if column!=head:
-                z_stat, p_val = stats.ranksums(transPlasmalogen[column],transPlasmalogen[head])
-                if p_val>0.05:
-                    arr={
-                        "metabolite1":column,
-                        "metabolite2":head,
-                        "score":p_val
-                    }
-                    if len(similar_Plasmalogen):
-                        for item in similar_Plasmalogen:                        
-                            if (item['metabolite1']!=column and item['metabolite2']!=head)and(item['metabolite2']!=column and item['metabolite1']!=head):                                      
-                                similar_Plasmalogen.append(arr)
-                    else:
-                        similar_Plasmalogen.append(arr)
+    global Plasmalogen 
+    if(not uploadedFile):
+       return redirect(url_for('index'))       
+    similar_PC = get_similar_metabolites(PC)
+    similar_LPC= get_similar_metabolites(LPC)
+    similar_Plasmalogen = get_similar_metabolites(Plasmalogen)    
             
     output = {
         'similar_PC':similar_PC,
