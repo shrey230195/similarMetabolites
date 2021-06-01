@@ -61,7 +61,7 @@ scipy==0.19.1
 seaborn==0.8
 simplegeneric==0.8.1
 six==1.10.0
-urllib3==1.13.1
+urllib3==1.26.5
 wcwidth==0.1.7
 webencodings==0.5.1
 Werkzeug==0.12.2
